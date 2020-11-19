@@ -1,18 +1,16 @@
 package com.serialization
 
 import android.os.Bundle
-import android.util.Log
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import com.serialization.model.CharacterParcelable
+import com.serialization.model.CharacterSerializable
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 
 class MainActivity : AppCompatActivity() {
-
-  companion object {
-    private const val TAG = "BENCHMARK"
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -23,21 +21,23 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  fun benchMark() {
+  private fun benchMark() {
     if (container.childCount > 1){
       container.removeViews(1, container.childCount - 1)
     }
 
+    runTestWithCount(10)
+    runTestWithCount(100)
     runTestWithCount(1_000)
     runTestWithCount(10_000)
-    runTestWithCount(50_000)
+//    runTestWithCount(50_000)
   }
 
   private fun runTestWithCount(count: Int){
-    val parcelableTime = measureTime { performParcelable(count) }
+    val parcelableTime = measureNanoTime { performParcelable(count) }
     logResult("Parcelable", parcelableTime, count)
 
-    val serializableTime = measureTime { performSerializable(count) }
+    val serializableTime = measureNanoTime { performSerializable(count) }
     logResult("Serializable", serializableTime, count)
   }
 
@@ -45,10 +45,10 @@ class MainActivity : AppCompatActivity() {
     val parcelable = CharacterParcelable()
     val bundle = bundleOf()
     for (i in 0..testCount) {
-      bundle.putParcelable("parcelable$i", parcelable)
+      bundle.putParcelable(i.toString(), parcelable)
     }
     for (i in 0..testCount) {
-      bundle.getParcelable<CharacterParcelable>("parcelable$i")
+      bundle.getParcelable<CharacterParcelable>(i.toString())
     }
   }
 
@@ -56,23 +56,15 @@ class MainActivity : AppCompatActivity() {
     val serializable = CharacterSerializable()
     val bundle = bundleOf()
     for (i in 0..testCount) {
-      bundle.putSerializable("serializable$i", serializable)
+      bundle.putSerializable(i.toString(), serializable)
     }
     for (i in 0..testCount) {
-      bundle.getSerializable("serializable$i") as CharacterSerializable
+      bundle.getSerializable(i.toString()) as CharacterSerializable
     }
-  }
-
-  private fun measureTime(measured: () -> Unit): Long {
-    val startTime = System.currentTimeMillis()
-    measured.invoke()
-    val endTime = System.currentTimeMillis()
-    return endTime - startTime
   }
 
   private fun logResult(testSubject: String, time: Long, count: Int) {
-    val message = "$count items: $time ms $testSubject took to perform"
-//    Log.d(TAG, message)
+    val message = "$count items: $time ns for $testSubject"
     addText(message)
   }
 
