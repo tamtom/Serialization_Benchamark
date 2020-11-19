@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
   private fun logResult(testSubject: String, time: Long, count: Int) {
     val message = "$count items: $time ms $testSubject took to perform"
-    Log.d(TAG, message)
+//    Log.d(TAG, message)
     addText(message)
   }
 
