@@ -6,11 +6,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import com.serialization.model.CharacterParcelable
 import com.serialization.model.CharacterSerializable
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.benchmarkButton
+import kotlinx.android.synthetic.main.activity_main.container
 import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 
 class MainActivity : AppCompatActivity() {
+
+  companion object {
+    private const val NANO = "nanos"
+    private const val MS = "ms"
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -22,23 +28,31 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun benchMark() {
-    if (container.childCount > 1){
+    if (container.childCount > 1) {
       container.removeViews(1, container.childCount - 1)
     }
 
-    runTestWithCount(10)
-    runTestWithCount(100)
-    runTestWithCount(1_000)
-    runTestWithCount(10_000)
-//    runTestWithCount(50_000)
+    runTestWithCount(10, NANO)
+    runTestWithCount(100, NANO)
+    runTestWithCount(1_000, MS)
+    runTestWithCount(10_000, MS)
+    runTestWithCount(50_000, MS)
   }
 
-  private fun runTestWithCount(count: Int){
-    val parcelableTime = measureNanoTime { performParcelable(count) }
-    logResult("Parcelable", parcelableTime, count)
+  private fun runTestWithCount(count: Int, timeFormat: String) {
+    if (timeFormat == NANO) {
+      val parcelableTime = measureNanoTime { performParcelable(count) }
+      logResult("Parcelable", parcelableTime, count, timeFormat)
 
-    val serializableTime = measureNanoTime { performSerializable(count) }
-    logResult("Serializable", serializableTime, count)
+      val serializableTime = measureNanoTime { performSerializable(count) }
+      logResult("Serializable", serializableTime, count, timeFormat)
+    } else {
+      val parcelableTime = measureTimeMillis { performParcelable(count) }
+      logResult("Parcelable", parcelableTime, count, timeFormat)
+
+      val serializableTime = measureTimeMillis { performSerializable(count) }
+      logResult("Serializable", serializableTime, count, timeFormat)
+    }
   }
 
   private fun performParcelable(testCount: Int) {
@@ -63,12 +77,12 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  private fun logResult(testSubject: String, time: Long, count: Int) {
-    val message = "$count items: $time ns for $testSubject"
+  private fun logResult(testSubject: String, time: Long, count: Int, timeFormat: String) {
+    val message = "$count items: $time $timeFormat for $testSubject"
     addText(message)
   }
 
-  private fun addText(message: String){
+  private fun addText(message: String) {
     val textView = TextView(this)
     textView.text = message
     container.addView(textView)
